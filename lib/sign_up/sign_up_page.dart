@@ -66,8 +66,7 @@ class SignUpScreen extends StatelessWidget {
                             ? 'Incorrect email'
                             : null,
                       ),
-                      onChanged: (_) =>
-                      controller.emailError.value = false,
+                      onChanged: (_) => controller.emailError.value = false,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your email';
@@ -115,8 +114,7 @@ class SignUpScreen extends StatelessWidget {
                             ? 'Incorrect password'
                             : null,
                       ),
-                      onChanged: (_) =>
-                      controller.passwordError.value = false,
+                      onChanged: (_) => controller.passwordError.value = false,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your password';
@@ -139,36 +137,20 @@ class SignUpScreen extends StatelessWidget {
                             ? 'Incorrect password'
                             : null,
                       ),
-                      onChanged: (_) =>
-                      controller.passwordError.value = false,
+                      onChanged: (_) => controller.passwordError.value = false,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please re-enter your password';
                         }
-                        if (value != controller.passwordController.text) {
+                        if (value !=
+                            controller.passwordController.text) {
                           return 'Passwords do not match';
                         }
                         return null;
                       },
                     ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ElevatedButton(
-                          onPressed: () {
-                            // Validate the form before submitting
-                            if (controller.formKey.currentState?.validate() ??
-                                false) {
-                              controller.registerUser();
-                            }
-                          },
-                          child: const Text('Submit'),
-                        ),
 
 
-                      ],
-                    )
                   ],
                 ),
               ),

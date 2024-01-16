@@ -61,6 +61,10 @@ class ChatController extends GetxController {
     String text = messageController.text.trim();
 
     if (text.isNotEmpty) {
+      // Get the recipient user's full name
+      var recipientUserSnapshot = await _firestore.collection('users').doc(_selectedUserId).get();
+      String recipientUserFullName = recipientUserSnapshot.get('fullName');
+
       await _firestore
           .collection('messages')
           .doc(_chatRoomId())
@@ -68,10 +72,13 @@ class ChatController extends GetxController {
           .add({
         'text': text,
         'senderId': _currentUser.uid,
+        'recipientId': _selectedUserId,
+        'recipientFullName': recipientUserFullName, // Add the fullName field
         'timestamp': FieldValue.serverTimestamp(),
       });
 
       messageController.clear();
     }
   }
+
 }

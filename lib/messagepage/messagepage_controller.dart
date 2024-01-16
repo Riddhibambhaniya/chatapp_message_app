@@ -21,9 +21,14 @@ class MessageController extends GetxController {
 
   Future<void> fetchOngoingChats() async {
     try {
+      if (currentUser.value == null) {
+        print('Current user is null');
+        return;
+      }
+
       var snapshot = await _firestore
           .collection('users')
-          .doc(currentUser.value?.uid)
+          .doc(currentUser.value!.uid)
           .get();
       List<dynamic> ongoingChats = snapshot.get('ongoingChats') ?? [];
 
@@ -39,11 +44,15 @@ class MessageController extends GetxController {
             .get();
 
         Timestamp latestMessageTimestamp = Timestamp.now();
+        String recipientFullName = ''; // Initialize recipientFullName
+
         if (latestMessage.docs.isNotEmpty) {
-          latestMessageTimestamp = latestMessage.docs.first['timestamp'];
+          var lastMessageData = latestMessage.docs.first.data();
+          latestMessageTimestamp = lastMessageData['timestamp'];
+          recipientFullName = lastMessageData['recipientFullName'];
         }
 
-        usersWithTimestamp.add(UserWithTimestamp(userId, latestMessageTimestamp));
+        usersWithTimestamp.add(UserWithTimestamp(userId, latestMessageTimestamp, recipientFullName));
       }
 
       // Sort users based on the latest message timestamp
@@ -57,7 +66,7 @@ class MessageController extends GetxController {
             return GestureDetector(
               child: Card(
                 child: ListTile(
-                  title: Text(userId), // Replace with the user's name
+                  title: Text(user.recipientFullName), // Display recipient's name
                   subtitle: Text('Last Message: ${user.timestamp.toDate()}'),
                 ),
               ),
@@ -77,6 +86,8 @@ class MessageController extends GetxController {
     }
   }
 
+
+
   String _generateChatId(String userId) {
     List<String> userIds = [currentUser.value!.uid, userId];
     userIds.sort();
@@ -87,6 +98,7 @@ class MessageController extends GetxController {
 class UserWithTimestamp {
   final String userId;
   final Timestamp timestamp;
+  final String recipientFullName;
 
-  UserWithTimestamp(this.userId, this.timestamp);
+  UserWithTimestamp(this.userId, this.timestamp,this.recipientFullName);
 }

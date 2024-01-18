@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:messageapp/chatpage/chatpage.dart';
 
+import '../styles/text_style.dart';
+
 class ContactController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -24,14 +26,20 @@ class ContactController extends GetxController {
       var snapshot = await _firestore.collection('users').get();
       List<DocumentSnapshot> users = snapshot.docs;
 
+      // Sort users alphabetically based on fullName
+      users.sort((a, b) => (a['fullName'] as String).compareTo(b['fullName'] as String));
+
       for (var user in users) {
         String fullName = user['fullName'];
         String userId = user.id;
 
         if (userId != _currentUser.uid) {
+          String contactInitial = fullName.isNotEmpty ? fullName[0].toUpperCase() : '';
+
           contactCards.add(
-            // contactpage.dart
-              GestureDetector(
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0), // Adjust vertical padding as needed
+              child: GestureDetector(
                 onTap: () async {
                   await _firestore
                       .collection('users')
@@ -41,17 +49,25 @@ class ContactController extends GetxController {
                   });
 
                   // Navigate to chat screen with selected user
-                  Get.to(() => ChatPage(currentUser: _currentUser,
-                    selectedUserId: userId,),
+                  Get.to(() => ChatPage(currentUser: _currentUser, selectedUserId: userId,),
                       arguments: {'selectedUserId': userId, 'currentUser': _currentUser});
                 },
                 child: Card(
-                  child: ListTile(
-                    title: Text(fullName),
+                  child: Container(
+                    color: Colors.white, // Set the transparent color here
+                    child: ListTile(
+                      leading: Padding(
+                        padding: const EdgeInsets.only(left:10.0),
+                        child: CircleAvatar(backgroundColor: Colors.grey,
+                          child: Text(contactInitial,style: textBolds,),
+                        ),
+                      ),
+                      title: Text(fullName, style: textBolds,),
+                    ),
                   ),
                 ),
-              )
-
+              ),
+            ),
           );
         }
       }

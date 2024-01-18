@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../dashbord/dashbord_page.dart';
 import '../sign_in/sign_in_page.dart';
 
 class SignUpController extends GetxController {
@@ -14,7 +15,7 @@ class SignUpController extends GetxController {
 
   RxBool emailError = false.obs;
   RxBool passwordError = false.obs;
-
+  RxBool isFormValid = false.obs;
   final formKey = GlobalKey<FormState>();
 
   Future<void> registerUser() async {
@@ -34,9 +35,10 @@ class SignUpController extends GetxController {
         'email': emailController.text,
         'phoneNumber': phoneNumberController.text,
         'uid': userCredential.user!.uid,
+
       });
 
-      Get.offAll(() => SignInScreen());
+      Get.offAll(() => DashboardScreen());
 
       fullNameController.clear();
       emailController.clear();

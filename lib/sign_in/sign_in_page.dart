@@ -3,7 +3,9 @@ import 'package:get/get.dart';
 import 'package:messageapp/sign_in/sign_in_controller.dart';
 
 import '../chatpage/chatpage_controller.dart';
+import '../onboarding/onboarding_page.dart';
 import '../sign_up/sign_up_page.dart';
+import '../styles/text_style.dart';
 
 class EmailValidator {
   static String? validate(String value) {
@@ -27,19 +29,42 @@ class SignInScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Sign In"),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            // Navigate back to the onboarding screen
+            Get.to(() => OnboardingScreen());
+          },
+        ),
+
       ),
       body: SingleChildScrollView(
         child: SafeArea(
           child: Form(
             key: controller.formKey,
-            child: Center(
+
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 25.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+
+                    SizedBox(height: 30),
+                    Text(
+                    'Log in to Chatbox',
+                    textAlign: TextAlign.center,
+                    style: textBolds,
+                  ),
+                    SizedBox(height: 50),
+                    Text(
+                      '''Welcome back! Sign in using your social 
+account or email to continue us''',
+                      textAlign: TextAlign.center,
+                      style: textWelcomeBack,
+                      maxLines: 2,
+                    ),
+                    SizedBox(height: 70),
                     TextFormField(
                       controller: controller.emailController,
                       decoration: InputDecoration(
@@ -66,7 +91,7 @@ class SignInScreen extends StatelessWidget {
                         return emailValidationResult;
                       },
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 30),
                     TextFormField(
                       controller: controller.passwordController,
                       obscureText: true,
@@ -90,33 +115,32 @@ class SignInScreen extends StatelessWidget {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ElevatedButton(
-                          onPressed: () {
-                            // Validate the form before submitting
-                            if (controller.formKey.currentState?.validate() ??
-                                false) {
-                              controller.signInUser();
-                            }
-                          },
-                          child: const Text('Sign In'),
+                    const SizedBox(height: 90),
+                  Container(
+                    width: 340,
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                        Color(0xFF24786D),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        const SizedBox(width: 10),
-                        ElevatedButton(
-                          onPressed: () {
-                            // Navigate to the sign-up screen
-                            Get.to(() => SignUpScreen());
-                          },
-                          child: const Text('Sign Up'),
-                        ),  ],
-                    )
+                      ),
+                      onPressed: () {
+                        if (controller.formKey.currentState?.validate() ??
+                            false) {
+                          controller.signInUser();
+                        }
+                      },
+                      child: Text(' Log In ', style: textBoldss),
+                    ),
+                  )
+
                   ],
                 ),
               ),
-            ),
+
           ),
         ),
       ),

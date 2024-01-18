@@ -9,10 +9,34 @@ class MessagePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Messages'),
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+        AppBar(
+        backgroundColor: Colors.black,
+        title: Padding(
+          padding: const EdgeInsets.only(left: 78.0),
+          child: Text('HOME', style: TextStyle(color: Colors.white)),
+        ),
       ),
-      body: Obx(
+      Positioned(
+        top: 120.0,
+        left: 0,
+        right: 0,
+        child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(30.0),
+                topRight: Radius.circular(30.0),
+              ),
+              color: Colors.white,
+            ),
+            height: MediaQuery.of(context).size.height * 0.8,
+            child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                Expanded(
+                child:   Obx(
             () => controller.messageCards.isEmpty
             ? Center(
           child: CircularProgressIndicator(),
@@ -21,7 +45,7 @@ class MessagePage extends StatelessWidget {
           children: controller.messageCards,
         ),
       ),
-    );
+                ) ] )) )]) );
   }
 }
 

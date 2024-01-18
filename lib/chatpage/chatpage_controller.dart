@@ -75,6 +75,7 @@ class ChatController extends GetxController {
         'recipientId': _selectedUserId,
         'recipientFullName': recipientUserFullName, // Add the fullName field
         'timestamp': FieldValue.serverTimestamp(),
+
       });
 
       messageController.clear();

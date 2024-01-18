@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:messageapp/sign_up/sign_up_controller.dart';
 
+import '../onboarding/onboarding_page.dart';
+import '../styles/text_style.dart';
+
 class EmailValidator {
   static String? validate(String value) {
     const Pattern pattern =
@@ -24,19 +27,42 @@ class SignUpScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Sign Up"),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            // Navigate back to the onboarding screen
+            Get.to(() => OnboardingScreen());
+          },
+        ),
+
       ),
       body: SingleChildScrollView(
         child: SafeArea(
           child: Form(
             key: controller.formKey,
-            child: Center(
+
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 25.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    SizedBox(height: 30),
+                    Text(
+                      'Sign up with Email',
+                      textAlign: TextAlign.center,
+                      style: textBolds,
+                    ),
+                    SizedBox(height: 50),
+                    Text(
+                      '''Get chatting with friends and family today by 
+signing up for our chat app!''',
+                      textAlign: TextAlign.center,
+                      style: textWelcomeBack,
+                      maxLines: 2,
+                    ),
+                    SizedBox(height: 60.0),
+
                     TextFormField(
                       controller: controller.fullNameController,
                       decoration: const InputDecoration(
@@ -149,11 +175,45 @@ class SignUpScreen extends StatelessWidget {
                         return null;
                       },
                     ),
-
-
+                    const SizedBox(height: 50),
+                    // Row(
+                    //   mainAxisAlignment: MainAxisAlignment.center,
+                    //   children: [
+                    //     ElevatedButton(
+                    //       onPressed: () {
+                    //         // Validate the form before submitting
+                    //         if (controller.formKey.currentState?.validate() ??
+                    //             false) {
+                    //           controller.registerUser();
+                    //         }
+                    //       },
+                    //       child: const Text('Submit'),
+                    //     ),
+                    //
+                    //   ],
+                    // ),
+                     Container(
+                      width: 340,
+                      height: 50,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                               Color(0xFF24786D),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: () {
+                          if (controller.formKey.currentState?.validate() ??
+                              false) {
+                            controller.registerUser();
+                          }
+                        },
+                        child: Text('Create an account', style: textBoldss),
+                      ),
+                    )
                   ],
                 ),
-              ),
             ),
           ),
         ),

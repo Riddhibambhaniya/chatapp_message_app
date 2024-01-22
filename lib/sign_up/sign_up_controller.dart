@@ -24,13 +24,9 @@ class SignUpController extends GetxController {
       await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailController.text,
         password: passwordController.text,
-        // phoneNumber: phoneNumberController.text,
       );
 
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userCredential.user!.uid)
-          .set({
+      await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
         'fullName': fullNameController.text,
         'email': emailController.text,
         'phoneNumber': phoneNumberController.text,
@@ -45,9 +41,11 @@ class SignUpController extends GetxController {
       passwordController.clear();
       reEnterPasswordController.clear();
       phoneNumberController.clear();
+      // Clear profile picture path
     } catch (e) {
       print('Registration failed: $e');
       // Handle registration failure, e.g., show an error message.
     }
   }
+
 }

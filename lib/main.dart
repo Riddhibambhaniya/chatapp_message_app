@@ -7,7 +7,6 @@ import 'contactpage/contactpage.dart';
 import 'messagepage/message_page.dart';
 import 'splashscreen/splashscreen_page.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -27,7 +26,7 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'Flutter Chat App',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        // primarySwatch: Colors.blue,
       ),
       home:SplashView (),
     );

@@ -13,18 +13,18 @@ class ContactPage extends StatelessWidget {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-        AppBar(
-        backgroundColor: Colors.black,
-        title: Padding(
-          padding: const EdgeInsets.only(left: 78.0),
-          child: Text('Contacts', style: TextStyle(color: Colors.white)),
-        ),
-      ),
-      Positioned(
-          top: 120.0,
-          left: 0,
-          right: 0,
-          child: Container(
+          AppBar(
+            backgroundColor: Colors.black,
+            title: Padding(
+              padding: const EdgeInsets.only(left: 78.0),
+              child: Text('Contacts', style: TextStyle(color: Colors.white)),
+            ),
+          ),
+          Positioned(
+            top: 120.0,
+            left: 0,
+            right: 0,
+            child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(30.0),
@@ -35,28 +35,42 @@ class ContactPage extends StatelessWidget {
               height: MediaQuery.of(context).size.height * 0.8,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                children: [
-                SizedBox(
-                height: 20,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(right: 215.0),
-                child: Text(
-                  'My Contacts',
-                   style: appbar2, // You need to define appbar2 style
+                children: [ GestureDetector(
+                  onTap: () => controller.createNewGroup(),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      'New group',
+                      style: TextStyle(color: Colors.blue),
+                    ),
+                  ),
                 ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Row(
+                      children: [
+                        Text(
+                          'My Contacts',
+                          style: appbar2, // You need to define appbar2 style
+                        ),
+
+
+                      ],
+                    ),
+
+                  Expanded(
+                    child: Obx(() {
+                      controller.update(); // Add this line to update the UI
+                      return ListView(
+                        children: controller.contactCards,
+                      );
+                    }),
+                  )
+                ],
               ),
-              Expanded(
-              child:  Obx(() {
-        controller.update(); // Add this line to update the UI
-        return ListView(
-          children: controller.contactCards,
-        );
-      }),
-              )   ],
-              ),
+            ),
           ),
-      ),
         ],
       ),
     );

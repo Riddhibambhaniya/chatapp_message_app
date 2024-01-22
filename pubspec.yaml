@@ -41,6 +41,10 @@ dependencies:
   get: ^4.6.6
   image_picker: ^1.0.7
   firebase_storage: ^11.6.0
+  timeago: ^3.2.2
+  emoji_picker_flutter: ^1.6.3
+  intl: ^0.18.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

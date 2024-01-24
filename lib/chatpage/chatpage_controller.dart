@@ -58,6 +58,10 @@ class ChatController extends GetxController {
     }
   }
 
+
+
+
+
   String _chatRoomId() {
     List<String> userIds = [_currentUser.uid, _selectedUserId];
     userIds.sort();

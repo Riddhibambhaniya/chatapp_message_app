@@ -1,38 +1,63 @@
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
+// MessageController
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:get/get.dart';
 
 class MessageController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Rx<User?> currentUser = Rx<User?>(null);
-  RxList<UserWithTimestamp> usersWithTimestamp = <UserWithTimestamp>[].obs;
+  RxList<Chat> personalChats = <Chat>[].obs;
+  RxList<GroupChat> groupChats = <GroupChat>[].obs;
 
   @override
   void onInit() {
     super.onInit();
     currentUser.value = _auth.currentUser;
-    fetchOngoingChats();
+    fetchChats();
   }
 
-  Future<void> fetchOngoingChats() async {
+  Future<void> fetchChats() async {
     try {
       if (currentUser.value == null) {
         print('Current user is null');
         return;
       }
 
+      // Fetch personal chats
+      await fetchPersonalChats();
+
+      // Fetch group chats
+      await fetchGroupChats();
+    } catch (e) {
+      print('Error fetching chats: $e');
+    }
+  }
+
+  Future<void> fetchPersonalChats() async {
+    try {
       var snapshot = await _firestore
           .collection('users')
           .doc(currentUser.value!.uid)
           .get();
-      List<dynamic> ongoingChats = snapshot.get('ongoingChats') ?? [];
 
-      usersWithTimestamp.clear(); // Clear the previous data
+      // Ensure "ongoingChats" field is present and is a List
+      List<dynamic> ongoingChats = snapshot.get('ongoingChats') ?? [];
+      if (!(ongoingChats is List)) {
+        ongoingChats = [];
+      }
+
+      personalChats.clear();
+
 
       for (var userId in ongoingChats) {
+        // Fetch user data to get the full name
+        var userSnapshot = await _firestore.collection('users').doc(userId).get();
+        var fullName = userSnapshot.get('fullName') ?? 'Unknown';
+
+        // Fetch the latest message for the chat
         var latestMessage = await _firestore
             .collection('messages')
             .doc(_generateChatId(userId))
@@ -42,27 +67,93 @@ class MessageController extends GetxController {
             .get();
 
         Timestamp latestMessageTimestamp = Timestamp.now();
-        String recipientFullName = '';
-        String lastMessageText = ''; // Initialize lastMessageText
 
         if (latestMessage.docs.isNotEmpty) {
           var lastMessageData = latestMessage.docs.first.data();
           latestMessageTimestamp = lastMessageData['timestamp'];
-          recipientFullName = lastMessageData['recipientId'] == currentUser.value!.uid
-              ? lastMessageData['senderId']
-              : lastMessageData['recipientFullName'];
-          lastMessageText = lastMessageData['text']; // Assign lastMessageText correctly
         }
 
-        usersWithTimestamp.add(UserWithTimestamp(userId, latestMessageTimestamp, recipientFullName, lastMessageText));
+        personalChats.add(Chat(userId, fullName, latestMessageTimestamp));
       }
 
-      // Sort users based on the latest message timestamp
-      usersWithTimestamp.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      personalChats.sort((a, b) => b.latestMessageTimestamp.compareTo(a.latestMessageTimestamp));
     } catch (e) {
-      print('Error fetching ongoing chats: $e');
+      print('Error fetching personal chats: $e');
     }
   }
+
+
+  Future<void> fetchGroupChats() async {
+    try {
+      var snapshot = await _firestore
+          .collection('groups')
+          .where('members', arrayContains: currentUser.value!.uid)
+          .get();
+
+      groupChats.assignAll(snapshot.docs.map((doc) {
+        var groupChat = GroupChat.fromMap(doc.data());
+        print('Group ID: ${groupChat.groupId}');
+        return groupChat;
+      }).toList());
+      groupChats.sort((a, b) {
+        final aTimestamp = a.latestMessageTimestamp;
+        final bTimestamp = b.latestMessageTimestamp;
+
+        if (aTimestamp == null && bTimestamp == null) {
+          return 0;
+        } else if (aTimestamp == null) {
+          return 1;
+        } else if (bTimestamp == null) {
+          return -1;
+        }
+
+        return bTimestamp.compareTo(aTimestamp);
+      });
+
+      await fetchGroupMessagesForChats();
+    } catch (e) {
+      print('Error fetching group chats: $e');
+    }
+  }
+
+  Future<void> fetchGroupMessagesForChats() async {
+    try {
+      for (var groupChat in groupChats) {
+        if (groupChat.groupId.isNotEmpty) {
+          var messagesSnapshot = await _firestore
+              .collection('groups')
+              .doc(groupChat.groupId)
+              .collection('messages')
+              .orderBy('timestamp', descending: true)
+              .limit(1)
+              .get();
+
+          if (messagesSnapshot.docs.isNotEmpty) {
+            var lastMessageData = messagesSnapshot.docs.first.data();
+            groupChat.latestMessageTimestamp = lastMessageData['timestamp'];
+
+            // Update GroupMessage with senderName
+            groupChat.latestMessage = GroupMessage(
+              lastMessageData['senderId'],
+              lastMessageData['senderName'], // Make sure senderName is stored in Firestore
+              lastMessageData['text'],
+              lastMessageData['timestamp'],
+            );
+          } else {
+            print('Warning: No messages found for group chat with ID ${groupChat.groupId}');
+            // Handle the situation when there are no messages for this group chat
+          }
+        } else {
+          print('Warning: groupId is empty for a group chat');
+          // Handle the situation when groupId is empty for a group chat
+        }
+      }
+      update();
+    } catch (e) {
+      print('Error fetching group messages for chats: $e');
+    }
+  }
+
 
   String _generateChatId(String userId) {
     List<String> userIds = [currentUser.value!.uid, userId];
@@ -71,11 +162,46 @@ class MessageController extends GetxController {
   }
 }
 
-class UserWithTimestamp {
-  final String userId;
-  final Timestamp timestamp;
-  final String recipientFullName;
-  final String lastMessage;
+class Chat {
+final String userId;
+final String fullName;
+final Timestamp latestMessageTimestamp;
 
-  UserWithTimestamp(this.userId, this.timestamp, this.recipientFullName, this.lastMessage);
+Chat(this.userId, this.fullName, this.latestMessageTimestamp);
+}
+
+class GroupChat {
+  final String groupId;
+  final String groupName;
+  late Timestamp latestMessageTimestamp;
+  late GroupMessage? latestMessage;
+
+  GroupChat(this.groupId, this.groupName, this.latestMessageTimestamp);
+
+  factory GroupChat.fromMap(Map<String, dynamic> map) {
+    return GroupChat(
+      map['groupId'] ?? '', // Ensure groupId is not null
+      map['groupName'] ?? '',
+      map['latestMessageTimestamp'] ?? Timestamp.now(), // Provide a default value
+    );
+  }
+}
+
+
+class GroupMessage {
+  final String senderId;
+  final String senderName;
+  final String text;
+  final Timestamp timestamp;
+
+  GroupMessage(this.senderId, this.senderName, this.text, this.timestamp);
+
+  factory GroupMessage.fromMap(Map<String, dynamic> map) {
+    return GroupMessage(
+      map['senderId'] ?? '',
+      map['senderName'] ?? 'Unknown',
+      map['text'] ?? '',
+      map['timestamp'] ?? Timestamp.now(),
+    );
+  }
 }

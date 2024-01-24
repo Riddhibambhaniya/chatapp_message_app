@@ -18,34 +18,53 @@ class SignUpController extends GetxController {
   RxBool isFormValid = false.obs;
   final formKey = GlobalKey<FormState>();
 
+  String? profilePictureUrl; // Add a variable to store profile picture URL
+
   Future<void> registerUser() async {
     try {
-      UserCredential userCredential =
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
         email: emailController.text,
         password: passwordController.text,
       );
 
+      // Upload profile picture and get the download URL
+      // For simplicity, let's assume you have a separate method to upload the picture
+      // You can replace this with your actual method to upload profile pictures
+      String pictureUrl = await uploadProfilePicture(userCredential.user!.uid);
+
+      // Update the profile picture URL in the local variable
+      profilePictureUrl = pictureUrl;
+
+      // Save user data to Firestore with the profile picture URL
       await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
         'fullName': fullNameController.text,
         'email': emailController.text,
         'phoneNumber': phoneNumberController.text,
         'uid': userCredential.user!.uid,
-
+        'profilePictureUrl': profilePictureUrl,
       });
 
       Get.offAll(() => DashboardScreen());
 
+      // Clear form fields
       fullNameController.clear();
       emailController.clear();
       passwordController.clear();
       reEnterPasswordController.clear();
       phoneNumberController.clear();
-      // Clear profile picture path
     } catch (e) {
       print('Registration failed: $e');
       // Handle registration failure, e.g., show an error message.
     }
   }
 
+  // Replace this method with your actual method to upload profile pictures
+  Future<String> uploadProfilePicture(String userId) async {
+    // Implement your logic to upload the profile picture and get the download URL
+    // For example, you can use Firebase Storage for this purpose
+    // Once uploaded, return the download URL
+    String downloadUrl = "https://example.com/profile-picture.jpg";
+    return downloadUrl;
+  }
 }

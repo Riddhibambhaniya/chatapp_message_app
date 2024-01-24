@@ -2,15 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
+import '../auth.controller.dart';
 import '../chatpage/chatpage.dart';
+import '../groupchat/groupchat_UI.dart';
 import '../my profile/myprofile_controller.dart';
 import '../my profile/myprofile_page.dart';
-import '../styles/text_style.dart';
 import 'messagepage_controller.dart';
 
 class MessagePage extends StatelessWidget {
   final MessageController controller = Get.put(MessageController());
-
+  final MyProfileController myProfileController = Get.put(MyProfileController());
+  final AuthController authController = Get.put(AuthController());
   @override
   Widget build(BuildContext context) {
     timeago.setLocaleMessages('en', timeago.EnMessages());
@@ -21,14 +23,6 @@ class MessagePage extends StatelessWidget {
         children: [
           AppBar(
             backgroundColor: Colors.black,
-            // leading: Padding(
-            //   padding: const EdgeInsets.only(left: 24.0),
-            //   child: IconButton(
-            //     icon: Icon(Icons.search, color: Colors.white),
-            //     onPressed: () => Get.to(() => SearchScreen()
-            //     ),
-            //   ),
-            // ),
             title: Center(
               child: Text('Chats', style: TextStyle(color: Colors.white)),
             ),
@@ -37,39 +31,35 @@ class MessagePage extends StatelessWidget {
                 onTap: () {
                   Get.to(() => MyProfileView());
                 },
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 24.0),
-                  // child: Obx(() {
-                  //   final userController = Get.find<MyProfileController>();
-                  //   // final userProfilePic =
-                  //   //     userController.userProfilePic.value;
-                  //   final fullName = userController.fullName.value;
-                  //
-                  //   // return CircleAvatar(
-                  //   //   radius: 25.0,
-                  //   //   backgroundColor: Colors.white,
-                  //   //   backgroundImage: userProfilePic.isNotEmpty
-                  //   //       ? AssetImage(userProfilePic)
-                  //   //       : null,
-                  //   //   child: userProfilePic.isEmpty
-                  //   //       ? Text(
-                  //   //     fullName.isNotEmpty
-                  //   //         ? fullName[0].toUpperCase()
-                  //   //         : '',
-                  //   //     style: TextStyle(
-                  //   //       fontSize: 20.0,
-                  //   //       fontWeight: FontWeight.bold,
-                  //   //       color: Colors.black,
-                  //   //     ),
-                  //   //   )
-                  //   //       : null,
-                  //   // );
-                  // }),
-                ),
+                child: Obx(() {
+                  final userController = Get.find<MyProfileController>();
+                  final userProfilePic =
+                      userController.userProfilePic.value;
+                  final userName = userController.userName.value;
+
+                  return CircleAvatar(
+                    radius: 25.0,
+                    backgroundColor: Colors.blue,
+                    backgroundImage: userProfilePic.isNotEmpty
+                        ? AssetImage(userProfilePic)
+                        : null,
+                    child: userProfilePic.isEmpty
+                        ? Text(
+                      userName.isNotEmpty
+                          ? userName[0].toUpperCase()
+                          : '',
+                      style: TextStyle(
+                        fontSize: 20.0,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    )
+                        : null,
+                  );
+                }),
               ),
             ],
           ),
-
           Positioned(
             top: 120.0,
             left: 0,
@@ -87,66 +77,106 @@ class MessagePage extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Expanded(
-                    child: Obx(
-                          () => controller.usersWithTimestamp.isEmpty
-                          ? Center(
-                        child: CircularProgressIndicator(),
-                      )
-                          : ListView.builder(
-                        itemCount: controller.usersWithTimestamp.length,
-                        itemBuilder: (context, index) {
-                          if (index < 0 || index >= controller.usersWithTimestamp.length) {
-                            return SizedBox.shrink();
-                          }
+                    child: Obx(() =>
+                    (controller.personalChats.isEmpty && controller.groupChats.isEmpty)
+                        ? Center(
+                      child: CircularProgressIndicator(),
+                    )
+                        : ListView.builder(
+                      itemCount: controller.personalChats.length + controller.groupChats.length,
+                      itemBuilder: (context, index) {
+                        if (index < controller.personalChats.length) {
+                          // Display personal chat
+                          var personalChat = controller.personalChats[index];
 
-                          var user = controller.usersWithTimestamp[index];
-                          var lastMessageTimestamp = user.timestamp.toDate();
-                          var timeDifference =
-                          timeago.format(lastMessageTimestamp, locale: 'en');
 
                           return GestureDetector(
-                            child: Card(
-                              color: Colors.white,
-                              child: ListTile(
-                                title: Row(mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(left:18.0),
-                                      child: Column( crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          // Text(
-                                          //     user.recipientFullName,
-                                          //     style: appbar2,
-                                          //   ),
-
-                                          Text(
-                                              '${user.lastMessage}',
+                              child: Card(
+                                color: Colors.white,
+                                child: ListTile(
+                                  title: Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 18.0),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              '${personalChat?.fullName ?? "No Name"}',
                                               style: TextStyle(fontSize: 14.0),
                                             ),
 
-                                        ],
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                   Spacer(),
-                                   Text(
-                                        timeDifference,
+                                      Spacer(),
+                                      Text(
+                                        timeago.format(
+                                          personalChat.latestMessageTimestamp!.toDate(),
+                                          locale: 'en',
+                                        ),
                                       ),
-
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                               /* subtitle: Text(
-                                  timeDifference,
-                                ),*/
                               ),
-                            ),
-                            onTap: () {
-                              Get.to(() => ChatPage(
-                                currentUser: controller.currentUser.value!,
-                                selectedUserId: user.userId,
+                              onTap: () {
+                                // Handle tap for personal chat
+                                Get.to(() => ChatPage(
+                                  currentUser: controller.currentUser.value!,
+                                  selectedUserId: personalChat.userId,
+                                ),
+                                    arguments: {
+                                      'selectedUserId': personalChat.userId,
+                                      'currentUser': controller.currentUser,
+                                    });
+                              },
+                            );
+                          } else {
+                            // Display group chat
+                            var groupChatIndex = index - controller.personalChats.length;
+                            var groupChat = controller.groupChats[groupChatIndex];
+                            return GestureDetector(
+                              child: Card(
+                                color: Colors.white,
+                                child: ListTile(
+                                  title: Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 18.0),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              '${groupChat?.groupName ?? "No Group Name"}',
+                                              style: TextStyle(fontSize: 14.0),
+                                            ),
+
+                                          ],
+                                        ),
+                                      ),
+                                      Spacer(),
+                                      Text(
+                                        timeago.format(
+                                          groupChat.latestMessageTimestamp!.toDate(),
+                                          locale: 'en',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                                  arguments: {'selectedUserId': user.userId, 'currentUser': controller.currentUser});
-                            },
-                          );
+                              onTap: () async {
+                                // Handle tap for group chat
+                                await controller.fetchGroupMessagesForChats();
+                                // In MessagePage where you navigate to GroupChatPage
+                                Get.to(() => GroupChatPage(
+                                    groupId: groupChat.groupId, groupName: groupChat.groupName));
+                              },
+                            );
+                          }
                         },
                       ),
                     ),

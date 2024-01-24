@@ -1,87 +1,168 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
 
+
+
+import '../../styles/text_style.dart';
+
+
+import '../dashbord/dashbord_page.dart';
+import '../styles/color.dart';
 import 'myprofile_controller.dart';
 
-class MyProfileView extends StatelessWidget {
+class MyProfileView extends GetView<MyProfileController> {
   final MyProfileController controller = Get.put(MyProfileController());
-  final ImagePicker _imagePicker = ImagePicker();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('My Profile'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Obx(() {
-              final userProfilePic = controller.userProfilePic.value;
-              return Column(
-                children: [
-                  CircleAvatar(
-                    radius: 60.0,
-                    backgroundColor: Colors.grey,
-                    backgroundImage: userProfilePic.isNotEmpty
-                        ? NetworkImage(userProfilePic)
-                        : null,
-                    child: userProfilePic.isEmpty
-                        ? Text(
-                      controller.fullName.value.isNotEmpty
-                          ? controller.fullName.value[0].toUpperCase()
-                          : '',
-                      style: TextStyle(
-                        fontSize: 40.0,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 278.0),
+                child: IconButton(
+                  icon: Icon(Icons.arrow_back, color: ColorConstants.white),
+                  onPressed: () {
+                    Get.to(() => DashboardScreen ());
+                  },
+                ),
+              ),
+              CircleAvatar(
+                radius: 45.0,
+                backgroundColor: Colors.white,
+                child: Text(
+                  (controller.userName.isNotEmpty)
+                      ? controller.userName.value[0].toUpperCase()
+                      : '',
+                  style: TextStyle(
+                    fontSize: 35.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: 15,
+              ),
+              Obx(() => Text(
+                controller.userName.value,
+                style: appbar,
+              )),
+              SizedBox(
+                height: 50,
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(40.0),
+                    topRight: Radius.circular(40.0),
+                  ),
+                  color: Colors.white,
+                ),
+                width: 400,
+                height: 1000,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      height: 40,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 38.0),
+                      child: Text(
+                        "Display Name",
+                        style: appbar1,
                       ),
-                    )
-                        : null,
-                  ),
-                  SizedBox(height: 16.0),
-                  Text(
-                    'Email: ${controller.email.value}',
-                    style: TextStyle(fontSize: 16.0),
-                  ),
-                  SizedBox(height: 16.0),
-                  Text(
-                    'Phone Number: ${controller.phoneNumber.value}',
-                    style: TextStyle(fontSize: 16.0),
-                  ),
-                ],
-              );
-            }),
-            SizedBox(height: 16.0),
-            ElevatedButton(
-              onPressed: () async {
-                await _pickImage();
-              },
-              child: Text('Upload Profile Picture'),
-            ),
-
-            // Add other profile details and editing fields here
-          ],
+                    ),
+                    SizedBox(
+                      height: 15,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 38.0),
+                      child: Text(
+                        controller.userName.value,
+                        style: appbar2,
+                      ),
+                    ),
+                    SizedBox(
+                      height: 25,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 38.0),
+                      child: Text(
+                        "Email Address",
+                        style: appbar1,
+                      ),
+                    ),
+                    SizedBox(
+                      height: 15,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 38.0),
+                      child: Text(
+                        controller.userEmail.value,
+                        style: appbar2,
+                      ),
+                    ),
+                    SizedBox(
+                      height: 70,
+                    ),
+                    Center(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          primary: Colors.black,
+                          onPrimary: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30.0),
+                          ),
+                        ),
+                        onPressed: () {
+                         // Get.to(() => EditProfileView());
+                        },
+                        child: Text("Edit Profile"),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 40,
+                    ),
+                    Center(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          primary: Colors.black,
+                          onPrimary: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30.0),
+                          ),
+                        ),
+                        onPressed: () {
+                          Get.defaultDialog(
+                            title: "Log Out",
+                            titleStyle: textBolds,
+                            middleText: "Are you sure you want to log out?",
+                            middleTextStyle: appbar2,
+                            textConfirm: "Yes",
+                            textCancel: "No",
+                            onConfirm: () {
+                              controller.logOut();
+                            },
+                            onCancel: () {
+                              Get.back();
+                            },
+                          );
+                        },
+                        child: Text("Log Out"),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );
   }
-
-  Future<void> _pickImage() async {
-    try {
-      final pickedFile = await _imagePicker.pickImage(
-        source: ImageSource.gallery,
-      );
-
-      if (pickedFile != null) {
-        // Update the user's profile picture in the controller and Firestore
-        controller.userProfilePic.value = pickedFile.path;
-        await controller.updateProfilePicture();
-      }
-    } catch (e) {
-      print('Error picking image: $e');
-    }
-  }}
+}

@@ -1,71 +1,89 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:get/get.dart';
+// myprofile_controller.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../auth.controller.dart';
 
 class MyProfileController extends GetxController {
+  final AuthController authController = Get.find<AuthController>();
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Rx<User?> currentUser = Rx<User?>(null);
-  RxString userProfilePic = ''.obs;
-  RxString fullName = ''.obs;
-  RxString email = ''.obs;
-  RxString phoneNumber = ''.obs;
+  var userName = ''.obs;
+  var userEmail = RxString('');
+  var userPhoneNumber = RxString('');
+  var userProfilePic = ''.obs;
 
   @override
-  void onInit() {
+  Future<void> onInit() async {
     super.onInit();
-    currentUser.value = _auth.currentUser;
-    fetchUserProfile();
+    await getUserDataFromSharedPreferences();
   }
 
-  Future<void> fetchUserProfile() async {
-    try {
-      if (currentUser.value == null) {
-        print('Current user is null');
-        return;
-      }
+  Future<void> updateProfileDetails({
+    required String newDisplayName,
+    required String newEmail,
+    required String newPhoneNumber,
+  }) async {
+    final userUid = _auth.currentUser?.uid;
 
-      var userSnapshot = await _firestore
-          .collection('users')
-          .doc(currentUser.value!.uid)
-          .get();
+    if (userUid != null) {
+      await FirebaseFirestore.instance.collection('users').doc(userUid).update({
+        'fullName': newDisplayName,
+        'email': newEmail,
+        'phoneNumber': newPhoneNumber,
+      });
 
-      if (userSnapshot.exists) {
-        // Ensure the fields in your Firestore document match these names
-        userProfilePic.value = userSnapshot.get('userProfilePic') ?? '';
-        fullName.value = userSnapshot.get('fullName') ?? '';
-        email.value = userSnapshot.get('email') ?? '';
-        phoneNumber.value = userSnapshot.get('phoneNumber') ?? '';
-
-        print('User Profile Fetched: ${userProfilePic.value}, ${fullName.value}, ${email.value}, ${phoneNumber.value}');
-      } else {
-        print('User document does not exist');
-      }
-    } catch (e) {
-      print('Error fetching user profile: $e');
+      userName.value = newDisplayName;
+      userEmail.value = newEmail;
+      userPhoneNumber.value = newPhoneNumber;
     }
+
+    saveUserDataToSharedPreferences(userUid, newDisplayName, newEmail);
   }
 
+  Future<void> updateProfilePicture(String newProfilePictureUrl) async {
+    final userUid = _auth.currentUser?.uid;
 
-  Future<void> updateProfilePicture() async {
-    try {
-      if (currentUser.value == null) {
-        print('Current user is null');
-        return;
-      }
+    if (userUid != null) {
+      await FirebaseFirestore.instance.collection('users').doc(userUid).update({
+        'profilePictureUrl': newProfilePictureUrl,
+      });
 
-      await _firestore
-          .collection('users')
-          .doc(currentUser.value!.uid)
-          .update({'userProfilePic': userProfilePic.value});
-    } catch (e) {
-      print('Error updating profile picture: $e');
+      userProfilePic.value = newProfilePictureUrl;
     }
+
+    saveUserDataToSharedPreferences(userUid, userName.value, userEmail.value);
   }
 
-// Additional logic for updating other user details goes here
+  Future<void> saveUserDataToSharedPreferences(
+      String? userUid, String? userName, String? userEmail) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (userUid != null) prefs.setString('uid', userUid);
+    if (userName != null) prefs.setString('fullName', userName);
+    if (userEmail != null) prefs.setString('email', userEmail);
+  }
 
-// ... existing code ...
+  Future<void> getUserDataFromSharedPreferences() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    userName.value = prefs.getString('fullName') ?? '';
+    userEmail.value = prefs.getString('email') ?? '';
+    userProfilePic.value = prefs.getString('profilePictureUrl') ?? '';
+  }
+
+
+  Future<void> clearUserDataOnLogout() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.remove('uid');
+    prefs.remove('fullName');
+    prefs.remove('email');
+    prefs.remove('profilePictureUrl');
+  }
+
+  void logOut() {
+    clearUserDataOnLogout();
+    authController.signOutAndNavigateToOnboarding();
+  }
+
 }

@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../groupchat/groupchat_UI.dart';
+import '../messagepage/messagepage_controller.dart';
 
 class CreateGroupController extends GetxController {
   RxList<Map<String, dynamic>> contacts = <Map<String, dynamic>>[].obs;
@@ -20,14 +22,12 @@ class CreateGroupController extends GetxController {
       await FirebaseFirestore.instance.collection('users').get();
 
       contacts.assignAll(snapshot.docs.map((doc) {
+        var fullName = doc['fullName'] as String?;
         return {
           'userId': doc.id,
-          'fullName': doc['fullName'],
-          // Add other user details as needed
+          'fullName': fullName ?? 'Unknown',
         };
       }).toList());
-
-      // Remove the current user from the contact list
       var currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser != null) {
         contacts.removeWhere((contact) => contact['userId'] == currentUser.uid);
@@ -36,7 +36,6 @@ class CreateGroupController extends GetxController {
       print('Error fetching contacts: $e');
     }
   }
-
 
   void toggleContactSelection(String userId) {
     if (selectedContacts.contains(userId)) {
@@ -50,17 +49,32 @@ class CreateGroupController extends GetxController {
   void createGroup() {
     String groupName = groupNameController.text.trim();
     if (groupName.isNotEmpty && selectedContacts.isNotEmpty) {
-      print('Group Name: $groupName');
-      print('Selected Contacts: $selectedContacts');
+      // Create a group in Firestore
+      var groupRef = FirebaseFirestore.instance.collection('groups').doc();
+      var groupId = groupRef.id; // This line retrieves the group ID
+
+      // Add group details
+      groupRef.set({
+        'groupId': groupId,  // Add this line to store groupId
+        'groupName': groupName,
+        'members': [FirebaseAuth.instance.currentUser!.uid, ...selectedContacts],
+        'latestMessageTimestamp': FieldValue.serverTimestamp(),
+      });
+
 
       // Reset controllers and selected contacts
       groupNameController.clear();
       selectedContacts.clear();
 
+      // Fetch group chats again to update the state
+      Get.find<MessageController>().fetchGroupChats();
+
       Get.back(); // Navigate back or perform any other action
+      Get.to(() => GroupChatPage(groupId: groupId, groupName: groupName));
     } else {
       Get.snackbar('Error', 'Group name and contacts are required',
           snackPosition: SnackPosition.BOTTOM);
     }
   }
+
 }

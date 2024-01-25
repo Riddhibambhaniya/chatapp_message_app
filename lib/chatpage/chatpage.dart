@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:messageapp/styles/text_style.dart';
 import 'package:flutter/foundation.dart' as foundation;
@@ -32,85 +35,88 @@ class ChatPage extends StatelessWidget {
               : 'User';
           return Text(
             ' $fullName',
-            // Assuming appbar2 is defined somewhere in your styles
             style: appbar2,
           );
         }),
       ),
-
       body: Column(
-        children: [
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: () async {
-                await controller.fetchMessages();
-              },
-              child: FutureBuilder(
-                future: controller.fetchMessages(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  } else if (snapshot.hasError) {
-                    return Center(
-                      child: Text('Error: ${snapshot.error}'),
-                    );
-                  } else {
-                    return Obx(
-                          () => ListView.builder(
-                        reverse: true,
-                        itemCount: controller.messageWidgets.length,
-                        itemBuilder: (context, index) {
-                          ChatMessage message =
-                          controller.messageWidgets[index];
+          children: [
+      Expanded(
+      child: RefreshIndicator(
+      onRefresh: () async {
+    await controller.fetchMessages();
+    },
+      child: FutureBuilder(
+        future: controller.fetchMessages(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          } else if (snapshot.hasError) {
+            return Center(
+              child: Text('Error: ${snapshot.error}'),
+            );
+          } else {
+            return Obx(() =>
+                ListView.builder(
+                  reverse: true,
+                  itemCount: controller.messageWidgets.length,
+                  itemBuilder: (context, index) {
+                    ChatMessage message = controller.messageWidgets[index];
 
-                          return Align(
-                            alignment: message.isCurrentUserMessage
-                                ? Alignment.topRight
-                                : Alignment.topLeft,
-                            child: Container(
-                              margin: EdgeInsets.symmetric(
-                                  vertical: 5.0, horizontal: 10.0),
-                              padding: EdgeInsets.all(10.0),
-                              decoration: BoxDecoration(
-                                color: message.isCurrentUserMessage
-                                    ? Colors.blue
-                                    : Colors.grey,
-                                borderRadius: BorderRadius.circular(8.0),
+                    return Align(
+                      alignment: message.isCurrentUserMessage
+                          ? Alignment.topRight
+                          : Alignment.topLeft,
+                      child: Container(
+                        margin: EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+                        padding: EdgeInsets.all(10.0),
+                        decoration: BoxDecoration(
+                          color: message.isCurrentUserMessage ? Colors.blue : Colors.grey,
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (message.text.isNotEmpty) // Display text if it's not empty
+                              Text(
+                                message.text,
+                                style: TextStyle(
+                                  color: message.isCurrentUserMessage
+                                      ? Colors.white
+                                      : Colors.black,
+                                ),
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    message.text,
-                                    style: TextStyle(
-                                      color: message.isCurrentUserMessage
-                                          ? Colors.white
-                                          : Colors.black,
-                                    ),
-                                  ),
-                                  SizedBox(height: 5.0),
-                                  Text(
-                                    '${_formatDateTime(message.timestamp)}',
-                                    style: TextStyle(
-                                      color: message.isCurrentUserMessage
-                                          ? Colors.white
-                                          : Colors.black,
-                                    ),
-                                  ),
-                                ],
+                            if (message.imageUrl != null &&
+                                message.imageUrl!.isNotEmpty) // Display image if it's not empty
+                              Image.network(
+                                message.imageUrl!,
+                                width: 200, // Adjust the width as needed
+                              ),
+                            SizedBox(height: 5.0),
+                            Text(
+                              '${_formatDateTime(message.timestamp)}',
+                              style: TextStyle(
+                                color: message.isCurrentUserMessage
+                                    ? Colors.white
+                                    : Colors.black,
                               ),
                             ),
-                          );
-                        },
+                          ],
+                        ),
                       ),
                     );
-                  }
-                },
-              ),
-            ),
-          ),
+                  },
+                ),
+
+            );
+          }
+        },
+      ),
+    ),
+    ),
+
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
@@ -183,6 +189,18 @@ class ChatPage extends StatelessWidget {
                       ),
                     ),
                   ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.image),
+                  onPressed: () async {
+                    final pickedFile =
+                    await ImagePicker().pickImage(source: ImageSource.gallery);
+
+                    if (pickedFile != null) {
+                      File imageFile = File(pickedFile.path);
+                      await controller.uploadImage(imageFile);
+                    }
+                  },
                 ),
                 IconButton(
                   icon: const Icon(Icons.send),

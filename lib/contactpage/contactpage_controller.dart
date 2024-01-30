@@ -23,6 +23,16 @@ class ContactController extends GetxController {
     fetchContactCards();
   }
 
+  Future<String?> getUserProfilePictureUrl(String userId) async {
+    try {
+      var snapshot = await _firestore.collection('users').doc(userId).get();
+      return snapshot['profilePictureUrl'] as String?;
+    } catch (e) {
+      print('Error fetching profile picture URL: $e');
+      return null;
+    }
+  }
+
   void createNewGroup() {
     // Navigate to the create group screen and pass the selected contacts
     Get.to(() => CreateGroupPage(selectedContacts: selectedContacts));
@@ -77,9 +87,23 @@ class ContactController extends GetxController {
                     child: ListTile(
                       leading: Padding(
                         padding: const EdgeInsets.only(left: 10.0),
-                        child: CircleAvatar(
-                          backgroundColor: Colors.grey,
-                          child: Text(contactInitial, style: textBolds),
+                        child: FutureBuilder<String?>(
+                          future: getUserProfilePictureUrl(userId),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.done) {
+                              String? profilePictureUrl = snapshot.data;
+                              return CircleAvatar(
+                                backgroundColor: Colors.grey,
+                                backgroundImage: profilePictureUrl != null
+                                    ? NetworkImage(profilePictureUrl)
+                                    : null,
+                              );
+                            } else {
+                              return CircleAvatar(
+                                backgroundColor: Colors.grey,
+                              );
+                            }
+                          },
                         ),
                       ),
                       title: Text(fullName, style: textBolds),

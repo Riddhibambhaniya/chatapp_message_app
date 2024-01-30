@@ -44,6 +44,9 @@ dependencies:
   timeago: ^3.2.2
   emoji_picker_flutter: ^1.6.3
   intl: ^0.18.1
+  firebase_messaging: ^14.7.10
+  flutter_local_notifications: ^16.3.2
+  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_test:

@@ -173,19 +173,22 @@ Chat(this.userId, this.fullName, this.latestMessageTimestamp);
 class GroupChat {
   final String groupId;
   final String groupName;
+  final List<String> groupMembers; // Add this line
   late Timestamp latestMessageTimestamp;
   late GroupMessage? latestMessage;
 
-  GroupChat(this.groupId, this.groupName, this.latestMessageTimestamp);
+  GroupChat(this.groupId, this.groupName, this.groupMembers, this.latestMessageTimestamp);
 
   factory GroupChat.fromMap(Map<String, dynamic> map) {
     return GroupChat(
-      map['groupId'] ?? '', // Ensure groupId is not null
+      map['groupId'] ?? '',
       map['groupName'] ?? '',
-      map['latestMessageTimestamp'] ?? Timestamp.now(), // Provide a default value
+      List<String>.from(map['groupMembers'] ?? []),
+      map['latestMessageTimestamp'] ?? Timestamp.now(),
     );
   }
 }
+
 
 
 class GroupMessage {

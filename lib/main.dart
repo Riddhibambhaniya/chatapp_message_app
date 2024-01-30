@@ -4,9 +4,8 @@ import 'package:get/get.dart';
 
 
 import 'auth.controller.dart';
-import 'contactpage/contactpage.dart';
-import 'messagepage/message_page.dart';
 import 'splashscreen/splashscreen_page.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +22,7 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   final AuthController authController = Get.put(AuthController());
+
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         // primarySwatch: Colors.blue,
       ),
-      home:SplashView (),
+      home: SplashView(),
     );
   }
 }

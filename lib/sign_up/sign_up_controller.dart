@@ -1,10 +1,12 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../dashbord/dashbord_page.dart';
-import '../sign_in/sign_in_page.dart';
 
 class SignUpController extends GetxController {
   TextEditingController fullNameController = TextEditingController();
@@ -18,7 +20,7 @@ class SignUpController extends GetxController {
   RxBool isFormValid = false.obs;
   final formKey = GlobalKey<FormState>();
 
-  String? profilePictureUrl; // Add a variable to store profile picture URL
+  RxString profilePictureUrl = ''.obs; // Updated to RxString
 
   Future<void> registerUser() async {
     try {
@@ -29,20 +31,17 @@ class SignUpController extends GetxController {
       );
 
       // Upload profile picture and get the download URL
-      // For simplicity, let's assume you have a separate method to upload the picture
-      // You can replace this with your actual method to upload profile pictures
-      String pictureUrl = await uploadProfilePicture(userCredential.user!.uid);
 
-      // Update the profile picture URL in the local variable
-      profilePictureUrl = pictureUrl;
 
       // Save user data to Firestore with the profile picture URL
-      await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
+      await FirebaseFirestore.instance.collection('users').doc(
+        userCredential.user!.uid,
+      ).set({
         'fullName': fullNameController.text,
         'email': emailController.text,
         'phoneNumber': phoneNumberController.text,
         'uid': userCredential.user!.uid,
-        'profilePictureUrl': profilePictureUrl,
+        'profilePictureUrl': profilePictureUrl.value,
       });
 
       Get.offAll(() => DashboardScreen());
@@ -59,12 +58,5 @@ class SignUpController extends GetxController {
     }
   }
 
-  // Replace this method with your actual method to upload profile pictures
-  Future<String> uploadProfilePicture(String userId) async {
-    // Implement your logic to upload the profile picture and get the download URL
-    // For example, you can use Firebase Storage for this purpose
-    // Once uploaded, return the download URL
-    String downloadUrl = "https://example.com/profile-picture.jpg";
-    return downloadUrl;
-  }
+
 }

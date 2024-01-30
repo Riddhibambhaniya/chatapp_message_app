@@ -1,33 +1,25 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart' as foundation;
-import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 class ChatMessage {
   final String text;
   final String senderId;
   final bool isCurrentUserMessage;
   final DateTime timestamp;
-  final String? imageUrl; // Make imageUrl optional by using String?
 
   ChatMessage({
     required this.text,
     required this.senderId,
     required this.isCurrentUserMessage,
     required this.timestamp,
-    this.imageUrl, // Make imageUrl optional
   });
 }
-
-
 
 class ChatController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  File? _selectedImage;
 
   late User _currentUser;
   late String _selectedUserId;
@@ -90,22 +82,14 @@ class ChatController extends GetxController {
       messageWidgets.assignAll(
         messages.map(
               (message) {
-            bool isCurrentUserMessage = message['senderId'] == _currentUser.uid;
-
-            // Check if 'text' field exists before accessing
-            String text = message['text'] ?? '';
-
-            // Check if 'imageUrl' field exists and is not null before accessing
-            String? imageUrl =
-            message['imageUrl'] != null ? message['imageUrl']! : null;
+            bool isCurrentUserMessage =
+                message['senderId'] == _currentUser.uid;
 
             return ChatMessage(
-              text: text,
-              senderId: message['senderId'] ?? '',
+              text: message['text'],
+              senderId: message['senderId'],
               isCurrentUserMessage: isCurrentUserMessage,
-              timestamp: (message['timestamp'] as Timestamp?)?.toDate() ??
-                  DateTime.now(),
-              imageUrl: imageUrl,
+              timestamp: (message['timestamp'] as Timestamp).toDate(),
             );
           },
         ),
@@ -114,8 +98,6 @@ class ChatController extends GetxController {
       print('Error fetching messages: $e');
     }
   }
-
-
 
   Future<void> sendMessage() async {
     String text = messageController.text.trim();
@@ -138,38 +120,6 @@ class ChatController extends GetxController {
       });
 
       messageController.clear();
-    } else if (_selectedImage != null) {
-      await uploadImage(_selectedImage!);
-    }
-  }
-
-
-  Future<void> uploadImage(File imageFile) async {
-    try {
-      if (_selectedUserId.isNotEmpty) {
-        var storageRef = firebase_storage.FirebaseStorage.instance
-            .ref()
-            .child('chat_images/${_currentUser.uid}_${_selectedUserId}/${DateTime.now().millisecondsSinceEpoch}.jpg');
-
-        await storageRef.putFile(imageFile);
-
-        var imageUrl = await storageRef.getDownloadURL();
-
-        await _firestore
-            .collection('messages')
-            .doc(_chatRoomId())
-            .collection('messages')
-            .add({
-          'imageUrl': imageUrl,
-          'senderId': _currentUser.uid,
-          'recipientId': _selectedUserId,
-          'timestamp': FieldValue.serverTimestamp(),
-        });
-      } else {
-        print('Error: _selectedUserId is empty');
-      }
-    } catch (e) {
-      print('Error uploading image: $e');
     }
   }
 }

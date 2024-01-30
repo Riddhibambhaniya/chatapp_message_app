@@ -1,11 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-
-
+import 'package:image_picker/image_picker.dart';
 import '../../styles/text_style.dart';
-
-
 import '../dashbord/dashbord_page.dart';
 import '../styles/color.dart';
 import 'myprofile_controller.dart';
@@ -26,21 +24,47 @@ class MyProfileView extends GetView<MyProfileController> {
                 child: IconButton(
                   icon: Icon(Icons.arrow_back, color: ColorConstants.white),
                   onPressed: () {
-                    Get.to(() => DashboardScreen ());
+                    Get.to(() => DashboardScreen());
                   },
                 ),
               ),
               CircleAvatar(
-                radius: 45.0,
+                radius: 60.0,
                 backgroundColor: Colors.white,
-                child: Text(
-                  (controller.userName.isNotEmpty)
-                      ? controller.userName.value[0].toUpperCase()
-                      : '',
-                  style: TextStyle(
-                    fontSize: 35.0,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                child: GestureDetector(
+                  onTap: () async {
+                    await controller.updateProfilePicture();
+                  },
+                  child: Obx(
+                        () {
+                      if (controller.userProfilePic.isNotEmpty) {
+                        if (controller.userProfilePic.value.startsWith('http')) {
+                          // Display network image using Image.network
+                          return Image.network(
+                            controller.userProfilePic.value,
+                            fit: BoxFit.fill,
+                          );
+                        } else {
+                          // Display local image using Image.file
+                          return Image.file(
+                            File(controller.userProfilePic.value),
+                            fit: BoxFit.fill,
+                          );
+                        }
+                      } else {
+                        // Display placeholder or initials
+                        return Text(
+                          (controller.userName.isNotEmpty)
+                              ? controller.userName.value[0].toUpperCase()
+                              : '',
+                          style: TextStyle(
+                            fontSize: 35.0,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        );
+                      }
+                    },
                   ),
                 ),
               ),
@@ -103,7 +127,7 @@ class MyProfileView extends GetView<MyProfileController> {
                     Padding(
                       padding: const EdgeInsets.only(left: 38.0),
                       child: Text(
-                        controller.userEmail.value,
+                        controller.userEmail.value ?? '',
                         style: appbar2,
                       ),
                     ),
@@ -120,7 +144,8 @@ class MyProfileView extends GetView<MyProfileController> {
                           ),
                         ),
                         onPressed: () {
-                         // Get.to(() => EditProfileView());
+                          // Add functionality to navigate to EditProfileView
+                          // Get.to(() => EditProfileView());
                         },
                         child: Text("Edit Profile"),
                       ),
@@ -158,7 +183,7 @@ class MyProfileView extends GetView<MyProfileController> {
                     ),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),

@@ -15,10 +15,9 @@ class ContactPage extends StatelessWidget {
         children: [
           AppBar(
             backgroundColor: Colors.black,
-            title: Padding(
-              padding: const EdgeInsets.only(left: 78.0),
-              child: Text('Contacts', style: TextStyle(color: Colors.white)),
-            ),
+            title:
+               Center(child: Text('Contacts', style: TextStyle(color: Colors.white))),
+
           ),
           Positioned(
             top: 120.0,
@@ -35,24 +34,31 @@ class ContactPage extends StatelessWidget {
               height: MediaQuery.of(context).size.height * 0.8,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                children: [ GestureDetector(
-                  onTap: () => controller.createNewGroup(),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      'New group',
-                      style: TextStyle(color: Colors.blue),
-                    ),
-                  ),
-                ),
+                children: [ SizedBox(height: 30),
+                  GestureDetector(
+                       onTap: () => controller.createNewGroup(), child: Padding(
+                         padding: const EdgeInsets.only(left:28.0),
+                         child: Row(children: [
+                                             Icon(Icons.groups_2_outlined),
+                                             SizedBox(width: 28),
+                                        Text(
+                                               'New group',
+                                               style: appbar2,
+                                             ),
+                                           ],),
+                       )),
+
                   SizedBox(
-                    height: 20,
+                    height: 40,
                   ),
                   Row(
                       children: [
-                        Text(
-                          'My Contacts',
-                          style: appbar2, // You need to define appbar2 style
+                        Padding(
+                          padding: const EdgeInsets.only(left:28.0),
+                          child: Text(
+                            'My Contacts',
+                            style: appbar2, // You need to define appbar2 style
+                          ),
                         ),
 
 

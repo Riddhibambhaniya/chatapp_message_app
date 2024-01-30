@@ -1,12 +1,17 @@
 // group_chat_page.dart
+
 import 'dart:io';
 
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' as foundation;
+import '../styles/text_style.dart';
 import 'groupchat_controller.dart';
+import 'pollpage/create_poll_view.dart';
+import 'pollpage/poll card.dart';
 
 class GroupChatPage extends StatelessWidget {
   final String groupId;
@@ -24,32 +29,51 @@ class GroupChatPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(groupName),
+        title: Text(groupName, style: appbar2),
       ),
       body: Column(
         children: [
           Expanded(
-            child:
-            // group_chat_page.dart
-            // group_chat_page.dart
-            Obx(
+            child: Obx(
                   () => ListView.builder(
                 itemCount: controller.groupMessages.length,
+                reverse: true,
                 itemBuilder: (context, index) {
                   var message = controller.groupMessages[index];
+                  bool isCurrentUserMessage =
+                      message.senderId == FirebaseAuth.instance.currentUser?.uid;
+
                   return ListTile(
-                    title: Text(message.senderName),
                     subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: isCurrentUserMessage
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
                       children: [
-                        message.imageUrl != null
-                            ? Image.network(message.imageUrl!)
-                            : Text(message.text!),
-                        Text(
-                          'Sent by: ${message.senderName}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
+                        if (message.imageUrl != null)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 20.0, right: 20),
+                            child: Image.network(
+                              message.imageUrl!,
+                              height: 200,
+                              width: 150,
+                              fit: BoxFit.fill,
+                            ),
+                          )
+                        else if (message.text != null)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 20, right: 20.0),
+                            child: Text(message.text!, style: appbar2),
+                          )
+                        else if (message.poll != null)  // Check if the message is a poll
+                            PollWidget(message.poll!),  // Use PollWidget to display the poll
+                        Padding(
+                          padding: const EdgeInsets.only(left: 20, right: 20.0),
+                          child: Text(
+                            'Sent by: ${message.senderName}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
                           ),
                         ),
                       ],
@@ -58,62 +82,22 @@ class GroupChatPage extends StatelessWidget {
                 },
               ),
             ),
-
-
           ),
-          // Message input field and send button
           Row(
-            children: [    IconButton(
-              icon: Icon(Icons.emoji_emotions),
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  builder: (context) {
-                    return  EmojiPicker(
-                      onEmojiSelected: (Category? category, Emoji? emoji) {
-                        if (category != null && emoji != null) {
-                          controller.messageController.text += emoji.emoji;
-                        }
-                      },
-                      config: Config(
-                        columns: 7,
-                        emojiSizeMax: 32 *
-                            (foundation.defaultTargetPlatform ==
-                                TargetPlatform.iOS
-                                ? 1.30
-                                : 1.0),
-                        verticalSpacing: 0,
-                        horizontalSpacing: 0,
-                        gridPadding: EdgeInsets.zero,
-                        initCategory: Category.RECENT,
-                        bgColor: const Color(0xFFF2F2F2),
-                        indicatorColor: Colors.blue,
-                        iconColor: Colors.grey,
-                        iconColorSelected: Colors.blue,
-                        backspaceColor: Colors.blue,
-                        skinToneDialogBgColor: Colors.white,
-                        skinToneIndicatorColor: Colors.grey,
-                        enableSkinTones: true,
-                        recentTabBehavior: RecentTabBehavior.RECENT,
-                        recentsLimit: 28,
-                        replaceEmojiOnLimitExceed: false,
-                        noRecents: const Text(
-                          'No Recents',
-                          style: TextStyle(
-                              fontSize: 20, color: Colors.black26),
-                          textAlign: TextAlign.center,
-                        ),
-                        loadingIndicator: const SizedBox.shrink(),
-                        tabIndicatorAnimDuration: kTabScrollDuration,
-                        categoryIcons: const CategoryIcons(),
-                        buttonMode: ButtonMode.MATERIAL,
-                        checkPlatformCompatibility: true,
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
+            children: [
+              IconButton(
+                icon: Icon(Icons.emoji_emotions),
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    builder: (context) {
+                      return EmojiPicker(
+                        // ... Existing code ...
+                      );
+                    },
+                  );
+                },
+              ),
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
@@ -132,12 +116,10 @@ class GroupChatPage extends StatelessWidget {
                   ),
                 ),
               ),
-
               IconButton(
                 icon: Icon(Icons.image),
                 onPressed: () async {
-                  final pickedFile =
-                  await ImagePicker().pickImage(source: ImageSource.gallery);
+                  final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
 
                   if (pickedFile != null) {
                     File imageFile = File(pickedFile.path);
@@ -149,6 +131,17 @@ class GroupChatPage extends StatelessWidget {
                 icon: Icon(Icons.send),
                 onPressed: () {
                   controller.sendMessage();
+                },
+              ),
+              IconButton(
+                icon: Icon(Icons.poll),
+                onPressed: () {
+                  var currentUser = FirebaseAuth.instance.currentUser;
+                  if (currentUser != null) {
+                    Get.to(CreatePollPage());
+                  } else {
+                    print('User not authenticated. Please log in.');
+                  }
                 },
               ),
             ],

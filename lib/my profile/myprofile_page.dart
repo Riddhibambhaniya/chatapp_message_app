@@ -6,8 +6,8 @@ import 'package:image_picker/image_picker.dart';
 import '../../styles/text_style.dart';
 import '../dashbord/dashbord_page.dart';
 import '../styles/color.dart';
+import 'edit profile view.dart';
 import 'myprofile_controller.dart';
-
 class MyProfileView extends GetView<MyProfileController> {
   final MyProfileController controller = Get.put(MyProfileController());
 
@@ -22,49 +22,25 @@ class MyProfileView extends GetView<MyProfileController> {
               Padding(
                 padding: const EdgeInsets.only(right: 278.0),
                 child: IconButton(
-                  icon: Icon(Icons.arrow_back, color: ColorConstants.white),
+                  icon: Icon(Icons.arrow_back, color: Colors.white),
                   onPressed: () {
                     Get.to(() => DashboardScreen());
                   },
                 ),
               ),
               CircleAvatar(
-                radius: 60.0,
+                radius: 62.0,
                 backgroundColor: Colors.white,
                 child: GestureDetector(
                   onTap: () async {
                     await controller.updateProfilePicture();
                   },
-                  child: Obx(
-                        () {
-                      if (controller.userProfilePic.isNotEmpty) {
-                        if (controller.userProfilePic.value.startsWith('http')) {
-                          // Display network image using Image.network
-                          return Image.network(
-                            controller.userProfilePic.value,
-                            fit: BoxFit.fill,
-                          );
-                        } else {
-                          // Display local image using Image.file
-                          return Image.file(
-                            File(controller.userProfilePic.value),
-                            fit: BoxFit.fill,
-                          );
-                        }
-                      } else {
-                        // Display placeholder or initials
-                        return Text(
-                          (controller.userName.isNotEmpty)
-                              ? controller.userName.value[0].toUpperCase()
-                              : '',
-                          style: TextStyle(
-                            fontSize: 35.0,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        );
-                      }
-                    },
+                  child: ClipOval(
+                    child: SizedBox(
+                      width: 120.0,
+                      height: 120.0,
+                      child: YourImageWidget(controller: controller),
+                    ),
                   ),
                 ),
               ),
@@ -144,8 +120,7 @@ class MyProfileView extends GetView<MyProfileController> {
                           ),
                         ),
                         onPressed: () {
-                          // Add functionality to navigate to EditProfileView
-                          // Get.to(() => EditProfileView());
+                          Get.to(() => EditProfileView());
                         },
                         child: Text("Edit Profile"),
                       ),
@@ -188,6 +163,44 @@ class MyProfileView extends GetView<MyProfileController> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class YourImageWidget extends StatelessWidget {
+  final MyProfileController controller;
+
+  YourImageWidget({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+          () {
+        if (controller.userProfilePic.isNotEmpty) {
+          if (controller.userProfilePic.value.startsWith('http')) {
+            return Image.network(
+              controller.userProfilePic.value,
+              fit: BoxFit.cover,
+            );
+          } else {
+            return Image.file(
+              File(controller.userProfilePic.value),
+              fit: BoxFit.cover,
+            );
+          }
+        } else {
+          return Text(
+            (controller.userName.isNotEmpty)
+                ? controller.userName.value[0].toUpperCase()
+                : '',
+            style: TextStyle(
+              fontSize: 35.0,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          );
+        }
+      },
     );
   }
 }

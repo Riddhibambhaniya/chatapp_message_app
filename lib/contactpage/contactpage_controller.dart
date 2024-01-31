@@ -10,7 +10,7 @@ import '../styles/text_style.dart';
 class ContactController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
+  late List<DocumentSnapshot> users; // Add this line to store users
   late User _currentUser;
 
   RxList<Widget> contactCards = <Widget>[].obs;
@@ -34,12 +34,10 @@ class ContactController extends GetxController {
   }
 
   void createNewGroup() {
-    // Navigate to the create group screen and pass the selected contacts
     Get.to(() => CreateGroupPage(selectedContacts: selectedContacts));
   }
 
   void toggleContactSelection(String userId) {
-    // Toggle the selection of a contact
     if (selectedContacts.contains(userId)) {
       selectedContacts.remove(userId);
     } else {
@@ -50,9 +48,8 @@ class ContactController extends GetxController {
   Future<void> fetchContactCards() async {
     try {
       var snapshot = await _firestore.collection('users').get();
-      List<DocumentSnapshot> users = snapshot.docs;
+      users = snapshot.docs;
 
-      // Sort users alphabetically based on fullName
       users.sort((a, b) => (a['fullName'] as String).compareTo(b['fullName'] as String));
 
       for (var user in users) {
@@ -64,7 +61,7 @@ class ContactController extends GetxController {
 
           contactCards.add(
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0), // Adjust vertical padding as needed
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: GestureDetector(
                 onTap: () async {
                   await _firestore
@@ -74,7 +71,6 @@ class ContactController extends GetxController {
                     'ongoingChats': FieldValue.arrayUnion([userId]),
                   });
 
-                  // Navigate to chat screen with selected user
                   Get.to(() => ChatPage(
                     currentUser: _currentUser,
                     selectedUserId: userId,
@@ -83,7 +79,7 @@ class ContactController extends GetxController {
                 },
                 child: Card(
                   child: Container(
-                    color: Colors.white, // Set the transparent color here
+                    color: Colors.white,
                     child: ListTile(
                       leading: Padding(
                         padding: const EdgeInsets.only(left: 10.0),
@@ -106,6 +102,7 @@ class ContactController extends GetxController {
                           },
                         ),
                       ),
+
                       title: Text(fullName, style: textBolds),
                     ),
                   ),
@@ -119,4 +116,86 @@ class ContactController extends GetxController {
       print('Error fetching contact cards: $e');
     }
   }
+
+  // Method for updating the contact list based on the search query
+  Future<void> updateContactListAsync(String query) async {
+    // Fetch updated contacts asynchronously
+    await fetchContactCards();
+
+    // Clear the existing contact list
+    contactCards.clear();
+
+    // Filter contacts based on the query
+    for (var user in users) {
+      String fullName = user['fullName'];
+      String userId = user.id;
+
+      if (fullName.toLowerCase().contains(query.toLowerCase())) {
+        // Add matching contacts to the list
+        contactCards.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: GestureDetector(
+              onTap: () async {
+                await _firestore
+                    .collection('users')
+                    .doc(_currentUser.uid)
+                    .update({
+                  'ongoingChats': FieldValue.arrayUnion([userId]),
+                });
+
+                Get.to(() => ChatPage(
+                  currentUser: _currentUser,
+                  selectedUserId: userId,
+                ),
+                    arguments: {'selectedUserId': userId, 'currentUser': _currentUser});
+              },
+              child: Card(
+                child: Container(
+                  color: Colors.white,
+                  child: ListTile(
+                    leading: Padding(
+                      padding: const EdgeInsets.only(left: 10.0),
+                      child: FutureBuilder<String?>(
+                        future: getUserProfilePictureUrl(userId),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.done) {
+                            String? profilePictureUrl = snapshot.data;
+                            if (profilePictureUrl != null) {
+                              return CircleAvatar(
+                                backgroundColor: Colors.grey,
+                                backgroundImage: NetworkImage(profilePictureUrl),
+                              );
+                            } else {
+                              // No profile picture, display the first letter of the full name
+                              String contactInitial = fullName.isNotEmpty ? fullName[0].toUpperCase() : '';
+                              return CircleAvatar(
+                                backgroundColor: Colors.grey,
+                                child: Text(
+                                  contactInitial,
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              );
+                            }
+                          } else {
+                            // Loading state
+                            return CircleAvatar(
+                              backgroundColor: Colors.grey,
+                            );
+                          }
+                        },
+                      ),
+                    ),
+
+                    title: Text(fullName, style: textBolds),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
 }

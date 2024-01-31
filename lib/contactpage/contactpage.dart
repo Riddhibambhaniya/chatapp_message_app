@@ -6,18 +6,32 @@ import 'contactpage_controller.dart';
 
 class ContactPage extends StatelessWidget {
   final ContactController controller = Get.put(ContactController());
+  final TextEditingController searchController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
+
       body: Stack(
         children: [
-          AppBar(
-            backgroundColor: Colors.black,
-            title:
-               Center(child: Text('Contacts', style: TextStyle(color: Colors.white))),
+          Padding(
+            padding: const EdgeInsets.only(left:10.0, right:10.0),
+            child: AppBar(
+              backgroundColor: Colors.black,
+              title: Padding(
+                padding: const EdgeInsets.only(left:58.0),
+                child: Text('Contacts', style: TextStyle(color: Colors.white)),
+              ),
+              leading:
+                IconButton(
+                  icon: Icon(Icons.search,color: Colors.white,),
+                  onPressed: () {
+                    showSearch(context: context, delegate: ContactSearchDelegate(controller));
+                  },
+                ),
 
+            ),
           ),
           Positioned(
             top: 120.0,
@@ -34,40 +48,40 @@ class ContactPage extends StatelessWidget {
               height: MediaQuery.of(context).size.height * 0.8,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                children: [ SizedBox(height: 30),
+                children: [
+                  SizedBox(height: 30),
                   GestureDetector(
-                       onTap: () => controller.createNewGroup(), child: Padding(
-                         padding: const EdgeInsets.only(left:28.0),
-                         child: Row(children: [
-                                             Icon(Icons.groups_2_outlined),
-                                             SizedBox(width: 28),
-                                        Text(
-                                               'New group',
-                                               style: appbar2,
-                                             ),
-                                           ],),
-                       )),
-
+                    onTap: () => controller.createNewGroup(),
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 28.0),
+                      child: Row(
+                        children: [
+                          Icon(Icons.groups_2_outlined),
+                          SizedBox(width: 28),
+                          Text(
+                            'New group',
+                            style: appbar2,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                   SizedBox(
                     height: 40,
                   ),
                   Row(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(left:28.0),
-                          child: Text(
-                            'My Contacts',
-                            style: appbar2, // You need to define appbar2 style
-                          ),
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(left: 28.0),
+                        child: Text(
+                          'My Contacts',
+                          style: appbar2,
                         ),
-
-
-                      ],
-                    ),
-
+                      ),
+                    ],
+                  ),
                   Expanded(
                     child: Obx(() {
-                      controller.update(); // Add this line to update the UI
                       return ListView(
                         children: controller.contactCards,
                       );
@@ -80,5 +94,59 @@ class ContactPage extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class ContactSearchDelegate extends SearchDelegate {
+  final ContactController controller;
+
+  ContactSearchDelegate(this.controller);
+
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: Icon(Icons.clear),
+        onPressed: () {
+          query = '';
+        },
+      ),
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+      icon: Icon(Icons.arrow_back),
+      onPressed: () {
+        close(context, null);
+      },
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    return Container(
+      // Build the results asynchronously
+      child: FutureBuilder(
+        future: controller.updateContactListAsync(query),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            return Obx(() {
+              return ListView(
+                children: controller.contactCards,
+              );
+            });
+          } else {
+            return CircularProgressIndicator();
+          }
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    return Container();
   }
 }

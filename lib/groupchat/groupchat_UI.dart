@@ -83,68 +83,109 @@ class GroupChatPage extends StatelessWidget {
               ),
             ),
           ),
-          Row(
-            children: [
-              IconButton(
-                icon: Icon(Icons.emoji_emotions),
-                onPressed: () {
-                  showModalBottomSheet(
-                    context: context,
-                    builder: (context) {
-                      return EmojiPicker(
-                        // ... Existing code ...
-                      );
-                    },
-                  );
-                },
-              ),
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.rectangle,
-                    borderRadius: BorderRadius.circular(20.0),
-                    border: Border.all(width: 0.0, color: Colors.grey),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 8.0),
-                    child: TextField(
-                      controller: controller.messageController,
-                      decoration: const InputDecoration(
-                        hintText: 'Type a message...',
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: Icon(Icons.emoji_emotions),
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      builder: (context) {
+                        return EmojiPicker(
+                          onEmojiSelected: (Category? category, Emoji? emoji) {
+                            if (category != null && emoji != null) {
+                              controller.messageController.text += emoji.emoji;
+                            }
+                          },
+                          config: Config(
+                            columns: 7,
+                            emojiSizeMax: 32 *
+                                (foundation.defaultTargetPlatform ==
+                                    TargetPlatform.iOS
+                                    ? 1.30
+                                    : 1.0),
+                            verticalSpacing: 0,
+                            horizontalSpacing: 0,
+                            gridPadding: EdgeInsets.zero,
+                            initCategory: Category.RECENT,
+                            bgColor: const Color(0xFFF2F2F2),
+                            indicatorColor: Colors.blue,
+                            iconColor: Colors.grey,
+                            iconColorSelected: Colors.blue,
+                            backspaceColor: Colors.blue,
+                            skinToneDialogBgColor: Colors.white,
+                            skinToneIndicatorColor: Colors.grey,
+                            enableSkinTones: true,
+                            recentTabBehavior: RecentTabBehavior.RECENT,
+                            recentsLimit: 28,
+                            replaceEmojiOnLimitExceed: false,
+                            noRecents: const Text(
+                              'No Recents',
+                              style: TextStyle(fontSize: 20, color: Colors.black26),
+                              textAlign: TextAlign.center,
+                            ),
+                            loadingIndicator: const SizedBox.shrink(),
+                            tabIndicatorAnimDuration: kTabScrollDuration,
+                            categoryIcons: const CategoryIcons(),
+                            buttonMode: ButtonMode.MATERIAL,
+                            checkPlatformCompatibility: true,
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(20.0),
+                      border: Border.all(width: 0.0, color: Colors.grey),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: TextField(
+                        controller: controller.messageController,
+                        decoration: const InputDecoration(
+                          hintText: 'Type a message...',
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              IconButton(
-                icon: Icon(Icons.image),
-                onPressed: () async {
-                  final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
 
-                  if (pickedFile != null) {
-                    File imageFile = File(pickedFile.path);
-                    controller.uploadImage(imageFile);
-                  }
-                },
-              ),
-              IconButton(
-                icon: Icon(Icons.send),
-                onPressed: () {
-                  controller.sendMessage();
-                },
-              ),
-              IconButton(
-                icon: Icon(Icons.poll),
-                onPressed: () {
-                  var currentUser = FirebaseAuth.instance.currentUser;
-                  if (currentUser != null) {
-                    Get.to(CreatePollPage());
-                  } else {
-                    print('User not authenticated. Please log in.');
-                  }
-                },
-              ),
-            ],
+                IconButton(
+                  icon: Icon(Icons.image),
+                  onPressed: () async {
+                    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+
+                    if (pickedFile != null) {
+                      File imageFile = File(pickedFile.path);
+                      controller.uploadImage(imageFile);
+                    }
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.send),
+                  onPressed: () {
+                    controller.sendMessage();
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.poll),
+                  onPressed: () {
+                    var currentUser = FirebaseAuth.instance.currentUser;
+                    if (currentUser != null) {
+                      Get.to(CreatePollPage());
+                    } else {
+                      print('User not authenticated. Please log in.');
+                    }
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),

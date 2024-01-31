@@ -1,4 +1,5 @@
 // create_poll_controller.dart
+
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
@@ -8,6 +9,7 @@ class CreatePollController extends GetxController {
   final RxString question = ''.obs;
   final RxList<String> choices = <String>[].obs;
   final RxString pollId = ''.obs; // Add pollId to track the created poll
+  final RxBool showNewChoice = false.obs;
 
   void addChoice(String choice) {
     choices.add(choice);
@@ -15,6 +17,10 @@ class CreatePollController extends GetxController {
 
   void removeChoice(int index) {
     choices.removeAt(index);
+  }
+
+  void toggleNewChoice() {
+    showNewChoice.value = !showNewChoice.value;
   }
 
   bool validatePoll() {

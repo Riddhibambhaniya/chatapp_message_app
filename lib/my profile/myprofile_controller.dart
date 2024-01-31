@@ -1,7 +1,4 @@
-// myprofile_controller.dart
-
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +6,6 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../auth.controller.dart';
 
 class MyProfileController extends GetxController {
@@ -29,20 +25,17 @@ class MyProfileController extends GetxController {
     super.onInit();
     await loadUserData();
   }
+
   Future<String?> getUserProfilePictureUrl({required String userId}) async {
     try {
-      // Assuming you have a "users" collection in Firestore
       var userSnapshot = await _firestore.collection('users').doc(userId).get();
 
-      // Check if the user exists
       if (userSnapshot.exists) {
         var userProfile = userSnapshot.data();
-        // Assuming you store the profile picture URL under the key "profilePictureUrl"
         String? profilePictureUrl = userProfile?['profilePictureUrl'];
 
         return profilePictureUrl;
       } else {
-        // User not found
         return null;
       }
     } catch (e) {
@@ -86,7 +79,6 @@ class MyProfileController extends GetxController {
         'phoneNumber': newPhoneNumber,
       });
 
-      // Update the Rx variables to trigger updates in the UI
       userName.value = newDisplayName;
       userEmail.value = newEmail;
       userPhoneNumber.value = newPhoneNumber;
@@ -99,22 +91,17 @@ class MyProfileController extends GetxController {
     try {
       final userUid = _auth.currentUser?.uid;
 
-      // Upload image to Firebase Storage
       final storageRef = _storage.ref().child('profile_pictures/$userUid.jpg');
       await storageRef.putFile(imageFile);
 
-      // Get the download URL of the uploaded image
       final imageUrl = await storageRef.getDownloadURL();
 
-      // Update the user's profile picture URL in Firestore
       await _firestore.collection('users').doc(userUid).update({
         'profilePictureUrl': imageUrl,
       });
 
-      // Update the Rx variable to trigger updates in the UI
       userProfilePic.value = imageUrl;
 
-      // Save user data to SharedPreferences
       saveUserDataToSharedPreferences(userUid, userName.value, userEmail.value);
     } catch (e) {
       print('Error uploading and setting profile picture: $e');

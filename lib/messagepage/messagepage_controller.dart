@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 
+// MessageController
 class MessageController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -11,7 +12,16 @@ class MessageController extends GetxController {
   Rx<User?> currentUser = Rx<User?>(null);
   RxList<Chat> personalChats = <Chat>[].obs;
   RxList<GroupChat> groupChats = <GroupChat>[].obs;
+  RxList<Chat> filteredPersonalChats = <Chat>[].obs;
+  RxList<GroupChat> filteredGroupChats = <GroupChat>[].obs;
 
+  void filterChats(String query) {
+    // Filter personal chats based on the search query
+    filteredPersonalChats.assignAll(personalChats.where((chat) => chat.fullName.toLowerCase().contains(query.toLowerCase())));
+
+    // Filter group chats based on the search query
+    filteredGroupChats.assignAll(groupChats.where((groupChat) => groupChat.groupName.toLowerCase().contains(query.toLowerCase())));
+  }
   @override
   void onInit() {
     super.onInit();
@@ -51,7 +61,6 @@ class MessageController extends GetxController {
 
       personalChats.clear();
 
-
       for (var userId in ongoingChats) {
         // Fetch user data to get the full name
         var userSnapshot = await _firestore.collection('users').doc(userId).get();
@@ -81,7 +90,6 @@ class MessageController extends GetxController {
       print('Error fetching personal chats: $e');
     }
   }
-
 
   Future<void> fetchGroupChats() async {
     try {
@@ -154,13 +162,46 @@ class MessageController extends GetxController {
     }
   }
 
-
   String _generateChatId(String userId) {
     List<String> userIds = [currentUser.value!.uid, userId];
     userIds.sort();
     return userIds.join('_');
   }
+
+  void removePersonalChat(String userId) async {
+    try {
+      var currentUserUid = currentUser.value?.uid;
+      if (currentUserUid == null) return;
+
+      // Remove the user from the ongoingChats list
+      await _firestore.collection('users').doc(currentUserUid).update({
+        'ongoingChats': FieldValue.arrayRemove([userId]),
+      });
+
+      // Remove the messages for the personal chat
+      await _firestore.collection('messages').doc(_generateChatId(userId)).delete();
+    } catch (e) {
+      print('Error removing personal chat: $e');
+    }
+  }
+
+  void removeGroupChat(String groupId) async {
+    try {
+      // Remove the group chat from the groups collection
+      await _firestore.collection('groups').doc(groupId).delete();
+
+      // Remove the messages for the group chat
+      await _firestore.collection('groups').doc(groupId).collection('messages').get().then((snapshot) {
+        for (var doc in snapshot.docs) {
+          doc.reference.delete();
+        }
+      });
+    } catch (e) {
+      print('Error removing group chat: $e');
+    }
+  }
 }
+
 
 class Chat {
 final String userId;

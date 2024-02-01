@@ -18,46 +18,62 @@ class EditProfileView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CircleAvatar(
-              radius: 62.0,
-              backgroundColor: Colors.white,
-              child: GestureDetector(
-                onTap: () async {
-                  await controller.updateProfilePicture();
-                },
-                child: ClipOval(
-                  child: SizedBox(
-                    width: 120.0,
-                    height: 120.0,
-                    child: YourImageWidget(controller: controller),
+            Center(
+              child: CircleAvatar(
+                radius: 62.0,
+                backgroundColor: Colors.white,
+                child: GestureDetector(
+                  onTap: () async {
+                    await controller.updateProfilePicture();
+                  },
+                  child: ClipOval(
+                    child: SizedBox(
+                      width: 120.0,
+                      height: 120.0,
+                      child: YourImageWidget(controller: controller),
+                    ),
                   ),
                 ),
               ),
             ),
-            SizedBox(height: 15),
-            Text('Display Name', style: appbar1),
+            SizedBox(height: 80),
+            Padding(
+              padding: const EdgeInsets.only(left:8.0),
+              child: Text('Display Name', style: appbar1),
+            ),
             SizedBox(height: 10),
-            TextFormField(
-              controller: TextEditingController(text: controller.userName.value),
-              onChanged: (value) {
-                controller.userName.value = value;
-              },
-              decoration: InputDecoration(
-                hintText: 'Enter your new display name',
+            Padding(
+              padding: const EdgeInsets.only(left:8.0,right:8.0),
+              child: TextFormField(
+                controller: TextEditingController(text: controller.userName.value),
+                onChanged: (value) {
+                  controller.userName.value = value;
+                },
+                decoration: InputDecoration(
+                  hintText: 'Enter your new display name',
+                ),
               ),
             ),
-            SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: () {
-                controller.updateProfileDetails(
-                  newDisplayName: controller.userName.value,
-                  newEmail: controller.userEmail.value,
-                  newPhoneNumber: controller.userPhoneNumber.value,
-                );
-                Get.back();
-              },
-              child: Text('Confirm'),
-            ),
+            SizedBox(height:70),
+      Center(
+        child: ElevatedButton(
+          onPressed: () {
+            controller.updateProfileDetails(
+              newDisplayName: controller.userName.value,
+              newEmail: controller.userEmail.value,
+              newPhoneNumber: controller.userPhoneNumber.value,
+            );
+            Get.back();
+          },
+          style: ElevatedButton.styleFrom(
+            primary: Colors.black, // Background color
+            onPrimary: Colors.white, // Text color
+          ),
+          child: Text('Confirm'),
+        ),
+      ),
+
+
           ],
         ),
       ),

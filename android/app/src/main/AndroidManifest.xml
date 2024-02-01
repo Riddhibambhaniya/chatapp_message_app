@@ -2,7 +2,7 @@
     <application
         android:label="messageapp"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/chatbox">
         <activity
             android:name=".MainActivity"
             android:exported="true"

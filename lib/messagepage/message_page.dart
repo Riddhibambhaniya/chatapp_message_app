@@ -23,23 +23,26 @@ class MessagePage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Stack(
+      body:
+      Stack(
         children: [
           AppBar(
             backgroundColor: Colors.black,
-         leading :   IconButton(
-              icon: Icon(Icons.search, color: Colors.white),
-              onPressed: () {
-                // Open search screen when search icon is clicked
-                Get.to(() => SearchScreen());
-              },
-            ),
-            title: Center(
-              child: Padding(
-                padding: const EdgeInsets.only(left: 28.0),
+         leading :   Padding(
+           padding: const EdgeInsets.only(left:17.0),
+           child: IconButton(
+                icon: Icon(Icons.search, color: Colors.white),
+                onPressed: () {
+                  // Open search screen when search icon is clicked
+                  Get.to(() => SearchScreen());
+                },
+              ),
+         ),
+            title:  Padding(
+                padding: const EdgeInsets.only(left: 70.0),
                 child: Text('Chats', style: TextStyle(color: Colors.white)),
               ),
-            ),
+
             actions: [
               Padding(
                 padding: const EdgeInsets.only(right: 28.0),
